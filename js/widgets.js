@@ -4,15 +4,17 @@ const rw = id => { const e = document.querySelector(`[data-w="${id}"]`); if (e &
 const card = (t, inner, cls = '') => `<div class="my-5 p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-indigo-50 to-pink-50 border-2 border-indigo-100 ${cls}"><div class="text-xs font-extrabold uppercase tracking-wider text-indigo-600 mb-2">🎮 ${t}</div>${inner}</div>`;
 const btn = (act, attrs, txt, cls = 'bg-white border-2 border-slate-200 hover:border-indigo-400') => `<button data-act="${act}" ${attrs} class="px-3 py-2 rounded-xl text-sm font-bold text-slate-700 transition ${cls}">${txt}</button>`;
 
+const EXP_LIMIT = 10; /* jumlah soal Tantangan Satu Diagram (TP 13) */
 function explorer(id) {
   const T = mkTree(D.tree); const st = W[id] = W[id] || { sel: null, q: null, fb: null, sc: 0, tot: 0 };
   return wrap(id, () => {
     const x = st.sel, info = x ? `<div class="grid grid-cols-2 gap-x-3 gap-y-1 text-sm"><b>Node ${x}</b><span class="text-slate-500">${x === T.root ? 'Root' : T.kids[x].length ? 'Internal' : 'Leaf'}</span>
       <span>Parent</span><b>${T.parent[x] || '-'}</b><span>Child</span><b>${T.kids[x].join(', ') || '-'}</b><span>Sibling</span><b>${T.sibs(x).join(', ') || '-'}</b><span>Depth</span><b>${T.depth(x)}</b><span>Height</span><b>${T.height(x)}</b></div>` : '<p class="text-sm text-slate-500">Klik sebuah node pada diagram untuk melihat perannya.</p>';
     const q = st.q;
-    const quiz = !q ? `<div class="text-sm text-slate-600 mb-2">Uji pemahamanmu dengan soal acak dari diagram ini.</div>${btn('qnew', `data-w="${id}"`, '🎯 Mulai Tantangan', 'bg-indigo-600 text-white')}` :
+    const fin = st.tot >= EXP_LIMIT;
+    const quiz = !q ? `<div class="text-sm text-slate-600 mb-2">Uji pemahamanmu dengan ${EXP_LIMIT} soal acak dari diagram ini.</div>${btn('qnew', `data-w="${id}"`, '🎯 Mulai Tantangan', 'bg-indigo-600 text-white')}` :
       `<div class="text-sm font-semibold text-slate-800 mb-2">${q.t}</div>${q.num !== undefined ? `<div class="flex gap-2 flex-wrap">${[0, 1, 2, 3, 4].map(v => btn('qnum', `data-w="${id}" data-v="${v}"`, v)).join('')}</div>` : '<div class="text-xs text-slate-500">(klik node pada diagram)</div>'}
-      ${st.fb ? `<div class="mt-3 p-3 rounded-xl text-sm ${st.fb.ok ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">${st.fb.ok ? '✅ Benar!' : '❌ Belum tepat.'} ${st.fb.exp}</div><div class="mt-2">${btn('qnew', `data-w="${id}"`, 'Soal berikutnya →', 'bg-indigo-600 text-white')}</div>` : ''}<div class="mt-2 text-xs text-slate-500">Skor tantangan: ${st.sc}/${st.tot}</div>`;
+      ${st.fb ? `<div class="mt-3 p-3 rounded-xl text-sm ${st.fb.ok ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">${st.fb.ok ? '✅ Benar!' : '❌ Belum tepat.'} ${st.fb.exp}</div><div class="mt-2">${fin ? `<div class="p-3 rounded-xl bg-indigo-50 text-indigo-800 text-sm font-bold mb-2">🏁 Tantangan selesai! Skor akhir: ${st.sc} dari ${EXP_LIMIT}.</div>${btn('qreset', `data-w="${id}"`, '🔄 Ulangi Tantangan', 'bg-indigo-600 text-white')}` : btn('qnew', `data-w="${id}"`, 'Soal berikutnya →', 'bg-indigo-600 text-white')}</div>` : ''}<div class="mt-2 text-xs text-slate-500">Soal ${Math.min(st.tot + (st.fb ? 0 : 1), EXP_LIMIT)} dari ${EXP_LIMIT} · Skor: ${st.sc}/${st.tot}</div>`;
     return `<div class="grid md:grid-cols-2 gap-4"><div class="bg-white rounded-xl p-2">${svgTree(T.kids, [T.root], { rootSet: [T.root], sel: x, id, hl: q && st.fb && q.node ? q.node : [] })}</div><div class="space-y-3"><div class="bg-white rounded-xl p-3">${info}</div><div class="bg-white rounded-xl p-3">${quiz}</div></div></div>`;
   });
 }
@@ -25,6 +27,25 @@ function genQ(T) {
   if (k === 'height') return { t: `Berapa <b>height</b> node <b>${x}</b>? (height leaf = 0)`, num: T.height(x), exp: `Height = jumlah edge pada lintasan terpanjang dari ${x} ke leaf = ${T.height(x)}.` };
   if (k === 'sib') return { t: `Klik salah satu <b>sibling</b> dari node <b>${x}</b>.`, node: T.sibs(x), exp: `Sibling ${x}: ${T.sibs(x).join(', ')} (memiliki parent yang sama: ${T.parent[x]}).` };
   return { t: 'Klik sebuah <b>leaf</b> (node tanpa child).', node: T.leaves, exp: `Leaf: ${T.leaves.join(', ')}.` };
+}
+/* Tantangan Terminologi Komponen (TP 4-7): hanya Root, Node, Leaf, Edge - satu soal per istilah.
+   Sengaja TIDAK menanyakan parent/child/sibling (TP 8-10) maupun depth/height (TP 11-12). */
+const KMP = [
+  { term: 'Root', t: 'Klik node yang berperan sebagai <b>root</b>.', node: T => [T.root], exp: T => `Root adalah node teratas yang tidak memiliki parent, yaitu ${T.root}.` },
+  { term: 'Node', t: 'Berapa jumlah <b>node</b> pada diagram ini?', num: T => T.nodes.length, off: -2, exp: T => `Setiap lingkaran adalah satu node (${T.nodes.join(', ')}), jadi ada ${T.nodes.length} node.` },
+  { term: 'Leaf', t: 'Klik sebuah <b>leaf</b> (node yang tidak memiliki child).', node: T => T.leaves, exp: T => `Leaf adalah node tanpa child. Pada diagram ini: ${T.leaves.join(', ')}.` },
+  { term: 'Edge', t: 'Berapa jumlah <b>edge</b> (garis penghubung antar node) pada diagram ini?', num: T => T.nodes.length - 1, off: -1, exp: T => `Jumlah edge = jumlah node − 1 = ${T.nodes.length} − 1 = ${T.nodes.length - 1}.` }
+];
+function komponen() {
+  const T = mkTree(D.tree), st = W.kmp = W.kmp || { i: 0, fb: null, sc: 0 };
+  return wrap('kmp', () => {
+    if (st.i >= KMP.length) return `<div class="p-4 rounded-xl bg-white text-center"><div class="text-3xl mb-1">🏁</div><div class="font-bold text-slate-800">Tantangan selesai! Skor: ${st.sc} dari ${KMP.length}</div><p class="text-sm text-slate-600 my-2">Kamu sudah berlatih mengenali root, node, leaf, dan edge.</p>${btn('kmpreset', '', '🔄 Ulangi', 'bg-indigo-600 text-white')}</div>`;
+    const q = KMP[st.i], c = q.num ? q.num(T) : 0, opts = q.num ? [0, 1, 2, 3].map(k => c + q.off + k).filter(v => v > 0) : null;
+    const fb = st.fb ? `<div class="mt-3 p-3 rounded-xl text-sm ${st.fb.ok ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">${st.fb.ok ? '✅ Benar!' : '❌ Belum tepat.'} ${q.exp(T)}</div><div class="mt-2">${btn('kmpnext', '', st.i === KMP.length - 1 ? 'Lihat hasil →' : 'Soal berikutnya →', 'bg-indigo-600 text-white')}</div>` : '';
+    return `<div class="text-xs font-bold text-indigo-600 mb-1">Soal ${st.i + 1} dari ${KMP.length} · istilah: ${q.term}</div><div class="text-sm font-semibold text-slate-800 mb-3">${q.t}</div>
+    <div class="grid md:grid-cols-2 gap-4"><div class="bg-white rounded-xl p-2">${svgTree(T.kids, [T.root], { id: 'kmp', hl: st.fb && q.node ? q.node(T) : [] })}</div>
+    <div>${opts ? `<div class="flex gap-2 flex-wrap">${opts.map(v => btn('kmpnum', `data-v="${v}"`, v)).join('')}</div>` : '<div class="text-xs text-slate-500">(klik node pada diagram)</div>'}${fb}<div class="mt-3 text-xs text-slate-500">Skor: ${st.sc}/${st.i + (st.fb ? 1 : 0)}</div></div></div>`;
+  });
 }
 function classifier() {
   const G = D.groups, terms = Object.values(G).flat(), st = W.cls = W.cls || { sel: null, placed: {}, msg: '' };
@@ -56,7 +77,8 @@ function activity(sec) {
   const tp = sec.tp && sec.tp[0];
   if (tp === 2) return card('Tree atau Bukan? (TP 2)', treeOrNot());
   if (tp === 3 && D.groups) return card('Kelompokkan Istilah (TP 3)', classifier());
-  if ((tp === 4 || tp === 13) && D.tree) return card(tp === 4 ? 'Jelajahi Tree (TP 4–12)' : 'Tantangan Satu Diagram (TP 13)', explorer('exp' + tp));
+  if (tp === 4 && D.tree) return card('Tantangan Terminologi Komponen (TP 4–7)', komponen());
+  if (tp === 13 && D.tree) return card(`Tantangan Satu Diagram (TP 13) · ${EXP_LIMIT} soal`, explorer('exp13'));
   if (tp === 14 && D.specLkpd) return card('Susun Tree (TP 14)', builder('b-mat', D.specLkpd));
   return '';
 }

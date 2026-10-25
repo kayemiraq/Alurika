@@ -24,7 +24,7 @@ function blk(b, o) {
       return `<p class="leading-relaxed">${h}</p>`.replace('<p class="leading-relaxed"></p>', '');
     }
     case 'Header': return `<h4 class="font-bold mt-3">${inlHtml(b.c[2], o)}</h4>`;
-    case 'OrderedList': return `<ol class="list-decimal pl-6 space-y-1.5 my-2" start="${b.c[0][0] || 1}">${b.c[1].map(it => `<li>${it.map(x => blk(x, o)).join('')}</li>`).join('')}</ol>`;
+    case 'OrderedList': { const st = o.olStart; o.olStart = null; return `<ol class="list-decimal pl-6 space-y-1.5 my-2" start="${st || b.c[0][0] || 1}">${b.c[1].map(it => `<li>${it.map(x => blk(x, o)).join('')}</li>`).join('')}</ol>`; }
     case 'BulletList': return `<ul class="list-disc pl-6 space-y-1.5 my-2">${b.c.map(it => `<li>${it.map(x => blk(x, o)).join('')}</li>`).join('')}</ul>`;
     case 'BlockQuote': return `<div class="space-y-2">${b.c.map(x => blk(x, o)).join('')}</div>`;
     case 'Table': {
@@ -39,4 +39,5 @@ function blk(b, o) {
     default: return '';
   }
 }
-const blocksHtml = (bl, src, inputs, pre) => { const o = { src, inputs, pre: pre || 'x', n: 0 }; return bl.map((b, i) => { o.pre = (pre || 'x') + i + '_'; o.n = 0; return blk(b, o); }).join(''); };
+/* Daftar bernomor yang berurutan (tiap blok berisi 1 butir) dilanjutkan nomornya: 1., 2., 3. */
+const blocksHtml = (bl, src, inputs, pre) => { const o = { src, inputs, pre: pre || 'x', n: 0 }; let nx = 1; return bl.map((b, i) => { o.pre = (pre || 'x') + i + '_'; o.n = 0; if (b.t === 'OrderedList') { o.olStart = bl[i - 1] && bl[i - 1].t === 'OrderedList' ? nx : (b.c[0][0] || 1); nx = o.olStart + b.c[1].length; } return blk(b, o); }).join(''); };

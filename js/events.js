@@ -6,6 +6,12 @@ function toggleProgressModal() {
 }
 function ask(msg, cb, info) { confirmCb = cb; $('cf-no').classList.toggle('hidden', !!info); $('cf-ok').textContent = info ? 'Mengerti' : 'Ya, lanjutkan'; $('cf-msg').innerHTML = msg; $('confirm-modal').classList.remove('hidden'); }
 
+/* Jawaban Tantangan Terminologi Komponen: klik node (isNode) atau pilih angka */
+function kmpAnswer(v, isNode) {
+  const st = W.kmp, q = KMP[st.i], T = mkTree(D.tree); if (!q || st.fb || !!q.node !== isNode) return;
+  const ok = isNode ? q.node(T).includes(v) : v === q.num(T); st.fb = { ok }; if (ok) st.sc++; rw('kmp');
+}
+
 /* ===== EVENT ===== */
 const ACT = {
   go: e => switchTab(e.dataset.t), goq: e => { S[e.dataset.k].cur = Math.max(0, +e.dataset.i); render(); }, sec: e => { S.mat.cur = Math.max(0, +e.dataset.i); render(); window.scrollTo({ top: 0, behavior: 'smooth' }); },
@@ -15,9 +21,13 @@ const ACT = {
   lkdone: () => { const f = Object.values(S.lk).filter(Boolean).length; ask(f ? 'Tandai LKPD sebagai selesai? Asesmen Formatif akan terbuka.' : 'Belum ada kolom LKPD yang terisi. Tetap tandai selesai?', () => { S.lkDone = true; render(); }); },
   clearlk: () => ask('Semua isian LKPD akan dihapus (status selesai juga direset). Lanjutkan?', () => { S.lk = {}; S.lkDone = false; S.build['b-lk'] = { p: {} }; render(); }),
   resetall: () => ask('Semua jawaban & progres di perangkat ini akan dihapus. Lanjutkan?', () => { S = fresh(); $('progress-modal').classList.add('hidden'); render(); }),
-  node: e => { if (e.dataset.w === 'viz') { V.sel = e.dataset.n; return rw('viz'); } const id = e.dataset.w, st = W[id], n = e.dataset.n, T = mkTree(D.tree); if (st.q && st.q.node && !st.fb) { const ok = st.q.node.includes(n); st.fb = { ok, exp: st.q.exp }; st.tot++; if (ok) st.sc++; } else st.sel = n; rw(id); },
-  qnew: e => { const st = W[e.dataset.w]; st.q = genQ(mkTree(D.tree)); st.fb = null; rw(e.dataset.w); },
+  node: e => { if (e.dataset.w === 'kmp') return kmpAnswer(e.dataset.n, true); if (e.dataset.w === 'viz') { V.sel = e.dataset.n; return rw('viz'); } const id = e.dataset.w, st = W[id], n = e.dataset.n, T = mkTree(D.tree); if (st.q && st.q.node && !st.fb) { const ok = st.q.node.includes(n); st.fb = { ok, exp: st.q.exp }; st.tot++; if (ok) st.sc++; } else st.sel = n; rw(id); },
+  qnew: e => { const st = W[e.dataset.w]; if (st.tot >= EXP_LIMIT) return; st.q = genQ(mkTree(D.tree)); st.fb = null; rw(e.dataset.w); },
   qnum: e => { const st = W[e.dataset.w]; if (st.fb) return; const ok = +e.dataset.v === st.q.num; st.fb = { ok, exp: st.q.exp }; st.tot++; if (ok) st.sc++; rw(e.dataset.w); },
+  kmpnum: e => kmpAnswer(+e.dataset.v, false),
+  kmpnext: () => { W.kmp.i++; W.kmp.fb = null; rw('kmp'); },
+  kmpreset: () => { W.kmp = { i: 0, fb: null, sc: 0 }; render(); },
+  qreset: e => { const st = W[e.dataset.w]; Object.assign(st, { q: null, fb: null, sel: null, sc: 0, tot: 0 }); rw(e.dataset.w); },
   term: e => { W.cls.sel = e.dataset.t; rw('cls'); },
   grp: e => { const st = W.cls, t = st.sel; if (!t) { st.msg = 'Pilih istilah dulu.'; return rw('cls'); } if (D.groups[e.dataset.g].includes(t)) { st.placed[t] = e.dataset.g; st.msg = `✅ ${t} termasuk ${e.dataset.g}.`; st.sel = null; } else st.msg = `❌ ${t} bukan termasuk ${e.dataset.g}. Coba kelompok lain.`; rw('cls'); },
   ton: e => { W.ton[e.dataset.n] = e.dataset.v; rw('ton'); }
