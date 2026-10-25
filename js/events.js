@@ -24,6 +24,7 @@ const ACT = {
   node: e => { if (e.dataset.w === 'kmp') return kmpAnswer(e.dataset.n, true); if (e.dataset.w === 'viz') { V.sel = e.dataset.n; return rw('viz'); } const id = e.dataset.w, st = W[id], n = e.dataset.n, T = mkTree(D.tree); if (st.q && st.q.node && !st.fb) { const ok = st.q.node.includes(n); st.fb = { ok, exp: st.q.exp }; st.tot++; if (ok) st.sc++; } else st.sel = n; rw(id); },
   qnew: e => { const st = W[e.dataset.w]; if (st.tot >= EXP_LIMIT) return; st.q = genQ(mkTree(D.tree)); st.fb = null; rw(e.dataset.w); },
   qnum: e => { const st = W[e.dataset.w]; if (st.fb) return; const ok = +e.dataset.v === st.q.num; st.fb = { ok, exp: st.q.exp }; st.tot++; if (ok) st.sc++; rw(e.dataset.w); },
+  lkpick: e => { const k = e.dataset.k, v = e.dataset.v, y = window.scrollY; S.lk[k] = S.lk[k] === v ? '' : v; save(); render(); window.scrollTo(0, y); },
   kmpnum: e => kmpAnswer(+e.dataset.v, false),
   kmpnext: () => { W.kmp.i++; W.kmp.fb = null; rw('kmp'); },
   kmpreset: () => { W.kmp = { i: 0, fb: null, sc: 0 }; render(); },

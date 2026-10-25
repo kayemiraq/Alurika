@@ -33,5 +33,6 @@ function figHtml(url, src) {
   if (k === 'g2' && D.tree) return `<div class="my-3 p-3 rounded-2xl bg-slate-50 border border-slate-200">${fig2()}</div>`;
   if (k === 'g1' && D.tree && Object.keys(D.folder).length) return `<div class="my-3 p-3 rounded-2xl bg-slate-50 border border-slate-200">${fig2({ labels: D.folder })}</div>`;
   if (k === 'g3') return `<div class="my-3 p-3 rounded-2xl bg-slate-50 border border-slate-200">${fig3()}</div>`;
-  return `<div class="my-3 p-4 rounded-2xl border-2 border-dashed border-slate-300 text-center text-xs text-slate-500"><img src="${esc(url)}" alt="" onerror="this.remove()" class="mx-auto mb-2 max-w-full">🖼️ Gambar <code>${esc(url)}</code> tidak tersertakan pada berkas yang diunggah. Letakkan folder <code>media/</code> di samping halaman ini untuk menampilkannya.</div>`;
+  /* Gambar dari berkas media/ ditampilkan bila ada; bila tidak ada, tidak muncul apa-apa (tanpa pesan). */
+  return `<img src="${esc(url)}" alt="" onerror="this.remove()" class="my-3 mx-auto max-w-full">`;
 }

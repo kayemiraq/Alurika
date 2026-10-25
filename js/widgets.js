@@ -75,10 +75,10 @@ function builder(id, spec, hint) {
 }
 function activity(sec) {
   const tp = sec.tp && sec.tp[0];
-  if (tp === 2) return card('Tree atau Bukan? (TP 2)', treeOrNot());
-  if (tp === 3 && D.groups) return card('Kelompokkan Istilah (TP 3)', classifier());
-  if (tp === 4 && D.tree) return card('Tantangan Terminologi Komponen (TP 4–7)', komponen());
-  if (tp === 13 && D.tree) return card(`Tantangan Satu Diagram (TP 13) · ${EXP_LIMIT} soal`, explorer('exp13'));
-  if (tp === 14 && D.specLkpd) return card('Susun Tree (TP 14)', builder('b-mat', D.specLkpd));
+  if (tp === 2) return card('Tree atau Bukan?', treeOrNot());
+  if (tp === 3 && D.groups) return card('Kelompokkan Istilah', classifier());
+  if (tp === 4 && D.tree) return card('Tantangan Terminologi Komponen', komponen());
+  if (tp === 13 && D.tree) return card(`Tantangan Satu Diagram · ${EXP_LIMIT} soal`, explorer('exp13'));
+  if (tp === 14 && D.specLkpd) return card('Susun Tree', builder('b-mat', D.specLkpd));
   return '';
 }

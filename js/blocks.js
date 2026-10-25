@@ -11,6 +11,13 @@ function inlHtml(x, o) {
   }
 }
 const fld = (k, cls, ph) => `<input data-k="${k}" value="${esc(S.lk[k] || '')}" placeholder="${ph || ''}" class="${cls}">`;
+/* Tombol pilihan di dalam tabel LKPD. Nilai disimpan di S.lk[k]: 'y'/'n' (mode yn) atau 's'/'p' (mode pick). */
+function lkChoice(mode, k, ci) {
+  const v = S.lk[k], bt = (val, on, onCls, txt, label) => `<button type="button" data-act="lkpick" data-k="${k}" data-v="${val}" aria-pressed="${on}" aria-label="${label}" class="min-w-[44px] h-9 px-3 rounded-lg border-2 font-extrabold text-base transition ${on ? onCls : 'bg-white border-slate-200 text-slate-300 hover:border-indigo-400'}">${txt}</button>`;
+  if (mode === 'yn') return `<div class="flex gap-2">${bt('y', v === 'y', 'bg-emerald-500 border-emerald-500 text-white', '✓', 'Tree')}${bt('n', v === 'n', 'bg-rose-500 border-rose-500 text-white', '✗', 'Bukan tree')}</div>`;
+  const val = ci === 1 ? 's' : 'p';
+  return `<div class="flex justify-center">${bt(val, v === val, 'bg-indigo-600 border-indigo-600 text-white', v === val ? '✓' : '', ci === 1 ? 'Sudah' : 'Perlu latihan')}</div>`;
+}
 function blk(b, o) {
   switch (b.t) {
     case 'Para': case 'Plain': {
@@ -28,13 +35,17 @@ function blk(b, o) {
     case 'BulletList': return `<ul class="list-disc pl-6 space-y-1.5 my-2">${b.c.map(it => `<li>${it.map(x => blk(x, o)).join('')}</li>`).join('')}</ul>`;
     case 'BlockQuote': return `<div class="space-y-2">${b.c.map(x => blk(x, o)).join('')}</div>`;
     case 'Table': {
-      const t = tbl(b);
+      const t = tbl(b), hd = t.head ? t.rows[0].map(c => bTxt(c).trim()) : [];
+      /* Mode khusus tabel LKPD: 'yn' = pilih ✓/✗ (kolom "Tree atau bukan?"), 'pick' = pilih Sudah / Perlu latihan (satu saja) */
+      const mode = !o.inputs ? '' : hd[1] === 'Tree atau bukan?' ? 'yn' : (hd[1] === 'Sudah' && hd[2] === 'Perlu latihan') ? 'pick' : '';
+      const fixed = hd.join('|') === 'Pertanyaan|Jawaban kelompok'; /* lebar kolom 50:50 */
       const rows = t.rows.map((r, ri) => `<tr class="${ri === 0 && t.head ? 'bg-indigo-50 font-bold' : ''}">${r.map((cell, ci) => {
         const empty = !bTxt(cell); const tag = ri === 0 && t.head ? 'th' : 'td';
-        const inner = empty ? (o.inputs ? `<textarea data-k="${o.pre}t${o.n++}" rows="${t.rows.length === 1 && r.length === 1 ? 4 : 2}" class="w-full min-w-[90px] rounded-lg border border-slate-200 bg-white p-1.5 text-sm focus:outline-none focus:border-indigo-500">${esc(S.lk[o.pre + 't' + (o.n - 1)] || '')}</textarea>` : '') : cell.map(x => blk(x, o)).join('');
+        const sp = empty && ri > 0 && ((mode === 'yn' && ci === 1) || (mode === 'pick' && ci >= 1)) ? lkChoice(mode, o.pre + 'q' + ri, ci) : null;
+        const inner = sp ? sp : empty ? (o.inputs ? `<textarea data-k="${o.pre}t${o.n++}" rows="${t.rows.length === 1 && r.length === 1 ? 4 : 2}" class="w-full min-w-[90px] rounded-lg border border-slate-200 bg-white p-1.5 text-sm focus:outline-none focus:border-indigo-500">${esc(S.lk[o.pre + 't' + (o.n - 1)] || '')}</textarea>` : '') : cell.map(x => blk(x, o)).join('');
         return `<${tag} class="border border-slate-200 px-2.5 py-1.5 align-top text-left">${inner}</${tag}>`;
       }).join('')}</tr>`).join('');
-      return `<div class="overflow-x-auto my-3 rounded-xl"><table class="w-full text-sm border-collapse bg-white">${rows}</table></div>`;
+      return `<div class="overflow-x-auto my-3 rounded-xl"><table class="w-full text-sm border-collapse bg-white${fixed ? ' table-fixed' : ''}">${fixed ? '<colgroup><col style="width:50%"><col style="width:50%"></colgroup>' : ''}${rows}</table></div>`;
     }
     default: return '';
   }
