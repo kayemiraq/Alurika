@@ -25,7 +25,7 @@ function fig3() {
     ['(a)', l(70, 30, 35, 85) + l(70, 30, 105, 85) + l(35, 85, 35, 140) + c(70, 30, 'P') + c(35, 85, 'Q') + c(105, 85, 'R') + c(35, 140, 'S')],
     ['(b)', l(70, 40, 30, 110) + l(70, 40, 110, 110) + l(30, 110, 110, 110) + c(70, 40, 'X') + c(30, 110, 'Y') + c(110, 110, 'Z')],
     ['(c)', l(30, 35, 70, 105) + l(110, 35, 70, 105) + c(30, 35, 'M') + c(110, 35, 'N') + c(70, 105, 'O')]];
-  return `<div class="flex flex-wrap justify-center gap-4 my-3">${p.map(([t, s]) => `<div class="text-center"><svg viewBox="0 0 140 160" width="140" height="160" role="img" aria-label="Struktur ${t}">${s}</svg><div class="text-xs font-bold text-slate-600">${t}</div></div>`).join('')}</div><p class="text-[11px] text-slate-400 text-center">Digambar ulang dari keterangan gambar pada modul (berkas gambar asli tidak terunggah).</p>`;
+  return `<div class="flex flex-wrap justify-center gap-4 my-3">${p.map(([t, s]) => `<div class="text-center"><svg viewBox="0 0 140 160" width="140" height="160" role="img" aria-label="Struktur ${t}">${s}</svg><div class="text-xs font-bold text-slate-600">${t}</div></div>`).join('')}</div>`;
 }
 const FIG = { modul: { 'media/image6.gif': 'g2', 'media/image4.gif': 'g1', 'media/image3.gif': 'g3' }, lkpd: { 'media/image3.gif': 'g2', 'media/image1.gif': 'g1', 'media/image2.gif': 'g3' } };
 function figHtml(url, src) {
